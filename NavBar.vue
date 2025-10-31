@@ -2,7 +2,7 @@
 import { ref } from 'vue';
 
 const emit = defineEmits(['navigate']);
-const activeItem = ref('globe-view'); // 默认显示3D地球
+const activeItem = ref('globe-view'); 
 
 const navigateTo = (view) => {
   activeItem.value = view;
@@ -132,4 +132,5 @@ const navigateTo = (view) => {
 .nav-link:hover {
   background-color: #343a40;
 }
+
 </style>
