@@ -1,5 +1,5 @@
 
-import 'bootstrap-icons/font/bootstrap-icons.css'; // <-- 添加这一行
+import 'bootstrap-icons/font/bootstrap-icons.css'; 
 
 
 import 'bootstrap/dist/css/bootstrap.min.css';
