@@ -34,7 +34,7 @@ export function useVoiceRecognition() {
   };
 
   recognition.onerror = (event) => {
-    // event.error 常见值: 'no-speech', 'audio-capture', 'not-allowed', 'network', ...
+  
     error.value = `Speech recognition error: ${event.error}`;
     isListening.value = false;
   };
@@ -43,7 +43,7 @@ export function useVoiceRecognition() {
     isListening.value = false;
   };
 
-  // 尝试获取麦克风（请求权限并立即释放）
+  
   async function ensureMicrophone() {
     if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
       throw new Error('getUserMedia not supported');
@@ -61,12 +61,12 @@ export function useVoiceRecognition() {
     error.value = '';
 
     try {
-      // 先显式请求麦克风权限（这样可以得到更清晰的错误）
+     
       await ensureMicrophone();
       recognition.start();
-      // 不要在这里直接设置 isListening，等待 onstart 触发
+     
     } catch (err) {
-      // err.name 可能是 NotAllowedError / NotFoundError / NotReadableError 等
+     
       if (err && err.name === 'NotAllowedError') {
         error.value = 'Microphone permission denied. Please allow microphone access in browser settings.';
       } else if (err && err.name === 'NotFoundError') {
@@ -78,13 +78,13 @@ export function useVoiceRecognition() {
     }
   };
 
-  // 保底：当 isListening 外部被改为 false 时，确保 recognition 停止
+
   watch(isListening, (listening) => {
     if (!listening && recognition) {
       try {
         recognition.stop();
       } catch (e) {
-        // ignore
+       
       }
     }
   });
@@ -96,3 +96,4 @@ export function useVoiceRecognition() {
     toggleListening,
   };
 }
+
