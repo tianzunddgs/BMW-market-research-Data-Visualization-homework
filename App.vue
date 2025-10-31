@@ -16,21 +16,19 @@ import VChart from 'vue-echarts';
 import NavBar from './components/NavBar.vue';
 import { useVoiceRecognition } from './composables/useVoiceRecognition.js';
 
-// 導入圖片資源
+
 import earthTexture from './assets/earth.jpg';
 import heightTexture from './assets/bathymetry_bw_composite_4k.jpg';
 
 
-// 註冊 ECharts 組件
+
 echarts.use([
   TitleComponent, TooltipComponent, GridComponent, LegendComponent, ToolboxComponent,
   TimelineComponent, DataZoomComponent, VisualMapComponent, BarChart, LineChart,
   PieChart, ScatterChart, CanvasRenderer, UniversalTransition,
 ]);
 
-// ==========================================================
-// 新增：相關係數(趨勢分析)輔助函數
-// ==========================================================
+
 function calculateCorrelation(data, xKey, yKey) {
   if (data.length < 2) return { r: 0, text: "数据不足，无法分析趋势" };
 
@@ -66,7 +64,7 @@ function calculateCorrelation(data, xKey, yKey) {
 }
 
 
-// --- 響應式狀態 (保持不變) ---
+
 const allData = ref([]);
 const loading = ref(true);
 const error = ref(null);
@@ -92,7 +90,7 @@ const regionOptions = ref([]);
 const fuelOptions = ref([]);
 const transmissionOptions = ref([]);
 
-// --- 數據處理 (保持不變) ---
+
 onMounted(() => {
   Papa.parse('/BMW sales data (2010-2024) (1).csv', {
     download: true,
@@ -123,7 +121,7 @@ onMounted(() => {
   });
 });
 
-// --- 視圖切換與語音命令處理 (保持不變) ---
+
 const handleNavigation = (view) => {
   activeView.value = view;
 };
@@ -132,9 +130,9 @@ watch(transcript, (newTranscript) => {
   voiceCommandStatus.value = `识别到命令: "${newTranscript}"`;
   const command = newTranscript.toLowerCase();
   
-  console.log("Voice command received:", command); // 添加日志
+  console.log("Voice command received:", command); 
 
-  // 导航命令
+ 
   if (command.includes('地球') || command.includes('全球')) activeView.value = 'globe-view';
   else if (command.includes('探索') || command.includes('动态')) activeView.value = 'dynamic-explorer';
   else if (command.includes('趋势') || command.includes('年度')) activeView.value = 'sales-over-time';
@@ -144,7 +142,6 @@ watch(transcript, (newTranscript) => {
   else if (command.includes('驱动模式')) activeView.value = 'dynamic-fuel-type';
   else if (command.includes('变速箱')) activeView.value = 'sales-by-transmission';
   
-  // 筛选命令 (同时应用于3D地球和探索器)
   else if (activeView.value === 'dynamic-explorer' || activeView.value === 'globe-view') {
       if(command.includes('自动挡')) { 
           explorerTransmission.value = 'Automatic'; 
@@ -155,15 +152,15 @@ watch(transcript, (newTranscript) => {
           globeTransmissionFilter.value = 'Manual';
           voiceCommandStatus.value = "已筛选: 手动挡";
       } else if (command.includes('全部') || command.includes('重置')) { 
-          // 同时重置两个模块的筛选
+          
           explorerTransmission.value = 'All'; 
           globeTransmissionFilter.value = 'All';
           explorerFuel.value = 'All';
           globeFuelFilter.value = 'All';
-          explorerRegion.value = 'All'; // 如果需要，也可以重置地区
+          explorerRegion.value = 'All'; 
           voiceCommandStatus.value = "已重置筛选";
       }
-      // 添加对 Fuel Type 的筛选命令
+      
       else if (command.includes('汽油')) {
           explorerFuel.value = 'Petrol';
           globeFuelFilter.value = 'Petrol';
@@ -185,9 +182,7 @@ watch(transcript, (newTranscript) => {
 });
 
 
-// ==========================================================
-// 新增：為動態探索器計算過濾後的數據
-// ==========================================================
+
 const filteredExplorerData = computed(() => {
   return allData.value.filter(d => 
     (explorerRegion.value === 'All' || d.Region === explorerRegion.value) &&
@@ -196,9 +191,7 @@ const filteredExplorerData = computed(() => {
   );
 });
 
-// ==========================================================
-// 新增：動態探索器的自動分析
-// ==========================================================
+
 const explorerAnalysis = computed(() => {
   const data = filteredExplorerData.value;
   if (data.length === 0) {
@@ -232,9 +225,7 @@ const explorerAnalysis = computed(() => {
 });
 
 
-// --- ECharts 配置 (所有圖表) ---
 
-// 1. 全球3D銷量視圖 (保持不變)
 const globeViewOptions = computed(() => {
   if (!allData.value.length) return {};
   const years = [...new Set(allData.value.map(row => row.Year))].sort();
@@ -288,13 +279,13 @@ const globeViewOptions = computed(() => {
   };
 });
 
-// 2. 年度動態探索器 (泡泡圖)
+
 const dynamicExplorerOptions = computed(() => {
   if (!allData.value.length) return {};
   const years = [...new Set(allData.value.map(row => row.Year))].sort();
   const regions = regionOptions.value.filter(r => r !== 'All');
   
-  // 使用已計算的過濾數據
+ 
   const data = filteredExplorerData.value;
   
   const seriesTemplates = regions.map(region => ({
@@ -341,9 +332,7 @@ const dynamicExplorerOptions = computed(() => {
   };
 });
 
-// ==========================================================
-// 3. 年度總銷量趨勢 (Y 軸已修正)
-// ==========================================================
+
 const salesOverTimeOptions = computed(() => {
   const salesByYear = allData.value.reduce((acc, row) => { acc[row.Year] = (acc[row.Year] || 0) + row.Sales_Volume; return acc; }, {});
   const years = Object.keys(salesByYear).sort();
@@ -352,13 +341,13 @@ const salesOverTimeOptions = computed(() => {
     title: { text: 'BMW Global Sales Volume Trend', left: 'center' }, 
     tooltip: { trigger: 'axis' }, 
     xAxis: { type: 'category', data: years }, 
-    // 關鍵修改：設置 min: 'dataMin' 讓 Y 軸從數據最小值開始
+    
     yAxis: { type: 'value', name: 'Sales Volume', min: 'dataMin' }, 
     series: [{ name: 'Sales Volume', type: 'line', smooth: true, data: sales }] 
   };
 });
 
-// 4. 車系銷量分析 (保持不變)
+
 const salesBySeriesOptions = computed(() => {
   const getSeries = (model) => {
     if (model.startsWith('M')) return 'M Series'; if (model.startsWith('X')) return 'X Series';
@@ -370,21 +359,21 @@ const salesBySeriesOptions = computed(() => {
   return { title: { text: 'Sales Volume by Car Series', left: 'center' }, tooltip: { trigger: 'item' }, legend: { orient: 'vertical', left: 'left' }, series: [{ type: 'pie', radius: ['40%', '70%'], data: data }] };
 });
 
-// 5. 車型銷量分布 (保持不變)
+
 const salesByModelOptions = computed(() => {
   const salesByModel = allData.value.reduce((acc, row) => { acc[row.Model] = (acc[row.Model] || 0) + row.Sales_Volume; return acc; }, {});
   const data = Object.entries(salesByModel).map(([name, value]) => ({ name, value }));
   return { title: { text: 'Sales Distribution by Model', left: 'center' }, tooltip: { trigger: 'item' }, legend: { orient: 'vertical', left: 'left' }, series: [{ type: 'pie', radius: '60%', data: data }] };
 });
 
-// 6. 地區銷量對比 (保持不變)
+
 const salesByRegionOptions = computed(() => {
   const salesByRegion = allData.value.reduce((acc, row) => { acc[row.Region] = (acc[row.Region] || 0) + row.Sales_Volume; return acc; }, {});
   const regions = Object.keys(salesByRegion); const sales = regions.map(region => salesByRegion[region]);
   return { title: { text: 'Sales Volume by Region', left: 'center' }, tooltip: { trigger: 'axis' }, xAxis: { type: 'category', data: regions, axisLabel: { interval: 0, rotate: 30 } }, yAxis: { type: 'value' }, series: [{ type: 'bar', data: sales }] };
 });
 
-// 7. 驅動模式動態變化 (保持不變)
+
 const dynamicFuelTypeOptions = computed(() => {
   const years = [...new Set(allData.value.map(row => row.Year))].sort();
   const fuelTypes = [...new Set(allData.value.map(row => row.Fuel_Type))];
@@ -399,7 +388,7 @@ const dynamicFuelTypeOptions = computed(() => {
   return { baseOption: { timeline: { axisType: 'category', autoPlay: true, playInterval: 1500, data: years }, title: { subtext: 'Sales by fuel type', left: 'center' }, tooltip: { trigger: 'item' }, legend: { data: fuelTypes, orient: 'vertical', right: 10, top: 30 }, series: [{ type: 'pie', radius: '60%', center: ['50%', '55%'] }] }, options: options };
 });
 
-// 8. 變速箱銷量分析 (保持不變)
+
 const salesByTransmissionOptions = computed(() => {
     const sales = allData.value.reduce((acc, row) => { acc[row.Transmission] = (acc[row.Transmission] || 0) + row.Sales_Volume; return acc; }, {});
     const data = Object.entries(sales).map(([name, value]) => ({name, value}));
